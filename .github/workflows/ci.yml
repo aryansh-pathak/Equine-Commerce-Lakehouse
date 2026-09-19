@@ -1,0 +1,46 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    env:
+      DUCKDB_PATH: ${{ github.workspace }}/data/warehouse/ecl.duckdb
+      PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/src
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 17 (for PySpark)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Lint (ruff)
+        run: ruff check src pipelines app tests
+
+      - name: Run pipeline (extract -> spark -> dbt -> data-quality gate)
+        run: python pipelines/run_pipeline.py --source synthetic
+
+      - name: Unit + integration tests
+        run: pytest
+
+      - name: Upload data-quality report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dq-report
+          path: data/quality/

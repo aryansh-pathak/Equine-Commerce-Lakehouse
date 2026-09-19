@@ -1,0 +1,90 @@
+version: 2
+
+models:
+  - name: dim_product
+    description: "Product master (SKU dimension). One row per SKU."
+    columns:
+      - name: sku
+        description: "Primary key."
+        data_tests: [unique, not_null]
+      - name: category
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["Slow-Feed Hay Feeders", "Halters", "Headstalls",
+                         "Breast Collars", "Bridles", "Reins", "Horse Blankets",
+                         "Boots & Wraps", "Saddle Accessories", "Fly Masks",
+                         "Girths & Cinches", "Halter Fleece Sets",
+                         "Dog Collars & Leashes"]
+      - name: msrp
+        data_tests:
+          - not_null
+      - name: gross_margin
+        data_tests:
+          - not_null
+
+  - name: dim_channel
+    description: "Sales channels and marketplace fee rates."
+    columns:
+      - name: channel
+        data_tests: [unique, not_null]
+
+  - name: dim_date
+    description: "Date spine over the order history."
+    columns:
+      - name: date_day
+        data_tests: [unique, not_null]
+
+  - name: fct_orders
+    description: "Order-line fact with additive revenue, fees, COGS, and net margin."
+    columns:
+      - name: order_line_key
+        description: "Surrogate primary key (hash of order_id, sku, qty, price)."
+        data_tests: [unique, not_null]
+      - name: sku
+        description: "FK to dim_product."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: sku
+      - name: channel
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_channel')
+                field: channel
+      - name: quantity
+        data_tests: [not_null]
+      - name: unit_price
+        data_tests: [not_null]
+
+  - name: fct_inventory_snapshot
+    description: "Daily on-hand inventory position per SKU."
+    columns:
+      - name: sku
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: sku
+
+  - name: mart_sku_velocity
+    description: "SKU velocity (7d/28d) and stockout-risk classification."
+    columns:
+      - name: sku
+        data_tests: [unique, not_null]
+      - name: stockout_risk
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["no_recent_sales", "reorder_now", "watch", "healthy"]
+
+  - name: mart_channel_performance
+    description: "Revenue and net margin by channel."
+    columns:
+      - name: channel
+        data_tests: [unique, not_null]

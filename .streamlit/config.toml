@@ -1,0 +1,7 @@
+# Skip Streamlit's first-run email prompt (it crashes non-interactive launches,
+# e.g. Docker) and usage telemetry.
+[server]
+showEmailPrompt = false
+
+[browser]
+gatherUsageStats = false

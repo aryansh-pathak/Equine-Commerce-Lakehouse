@@ -1,0 +1,11 @@
+# DuckDB locally; swap `type` + connection block to snowflake/bigquery in the
+# cloud without changing a single model. DUCKDB_PATH is exported by the
+# Makefile / pipeline entrypoint (absolute path to the warehouse file).
+ecl:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('DUCKDB_PATH') }}"
+      schema: main
+      threads: 4

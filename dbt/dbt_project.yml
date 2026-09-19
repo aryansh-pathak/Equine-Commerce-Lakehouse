@@ -1,0 +1,21 @@
+name: "ecl"
+version: "0.1.0"
+config-version: 2
+
+profile: "ecl"
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Replenishment lead time (days) used for stockout-risk classification.
+  lead_time_days: 21
+
+models:
+  ecl:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table
